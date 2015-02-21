@@ -27,7 +27,10 @@ public class YelpAPI {
 
   private static final String API_HOST = "api.yelp.com";
   private static final String DEFAULT_TERM = "dinner";
-  private static final String DEFAULT_LOCATION = "San Francisco, CA";
+  //private static final String DEFAULT_LOCATION = "San Francisco, CA";
+  private static final String DEFAULT_LOCATION = "Hayes";
+  private static final double DEFAULT_LATITUDE = 37.77493;
+  private static final double DEFAULT_LONGITUDE = -122.419415;
   private static final int SEARCH_LIMIT = 3;
   private static final String SEARCH_PATH = "/v2/search";
   private static final String BUSINESS_PATH = "/v2/business";
@@ -36,10 +39,10 @@ public class YelpAPI {
    * Update OAuth credentials below from the Yelp Developers API site:
    * http://www.yelp.com/developers/getting_started/api_access
    */
-  private static final String CONSUMER_KEY = "";
-  private static final String CONSUMER_SECRET = "";
-  private static final String TOKEN = "";
-  private static final String TOKEN_SECRET = "";
+  private static final String CONSUMER_KEY = "zlf4pJN763y3udkSaBzk_w";
+  private static final String CONSUMER_SECRET = "KK0DbuhoQSIAQOD8Y2fXpBhMuh0";
+  private static final String TOKEN = "Q-70pEkQcI2P38WBf6YaqcgpNWTLnueG";
+  private static final String TOKEN_SECRET = "LwiBZvGni9uhfjIIEOWGHlA8sgM";
 
   OAuthService service;
   Token accessToken;
@@ -73,9 +76,16 @@ public class YelpAPI {
     OAuthRequest request = createOAuthRequest(SEARCH_PATH);
     request.addQuerystringParameter("term", term);
     request.addQuerystringParameter("location", location);
+    request.addQuerystringParameter("cll", String.valueOf(DEFAULT_LATITUDE) + ", " + String.valueOf(DEFAULT_LONGITUDE));
     request.addQuerystringParameter("limit", String.valueOf(SEARCH_LIMIT));
     return sendRequestAndGetResponse(request);
   }
+
+  // //PLEBS
+  // public String searchForBusinessesByGPSCoords(String ) {
+  //   OAuthRequest request = 
+
+  // }
 
   /**
    * Creates and sends a request to the Business API by business ID.
@@ -158,6 +168,9 @@ public class YelpAPI {
 
     @Parameter(names = {"-l", "--location"}, description = "Location to be Queried")
     public String location = DEFAULT_LOCATION;
+
+    // @Parameter(names = {"-c", "--cll"}, description = "GPS coordinates")
+    // public double latitude = DEFAULT_LATITUDE;
   }
 
   /**
