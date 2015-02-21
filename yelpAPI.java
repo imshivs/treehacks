@@ -28,10 +28,14 @@ public class YelpAPI {
   private static final String API_HOST = "api.yelp.com";
   private static final String DEFAULT_TERM = "dinner";
   //private static final String DEFAULT_LOCATION = "San Francisco, CA";
-  private static final String DEFAULT_LOCATION = "Hayes";
-  private static final double DEFAULT_LATITUDE = 37.77493;
-  private static final double DEFAULT_LONGITUDE = -122.419415;
-  private static final int SEARCH_LIMIT = 3;
+  private static final String DEFAULT_LOCATION = "Atlanta, GA";
+  private static final double DEFAULT_LATITUDE = 33.8145922;
+  private static final double DEFAULT_LONGITUDE = -84.415253;
+  private static final double DEFAULT_LONGITUDE_SW = -84.415253;
+  private static final double DEFAULT_LATITUDE_SW = -84.415253;
+  private static final double DEFAULT_LONGITUDE_NE = -84.411352 ;
+  private static final double DEFAULT_LATITUDE_NE = 33.787218;
+  private static final int SEARCH_LIMIT = 5;
   private static final String SEARCH_PATH = "/v2/search";
   private static final String BUSINESS_PATH = "/v2/business";
 
@@ -63,7 +67,7 @@ public class YelpAPI {
   }
 
   /**
-   * Creates and sends a request to the Search API by term, location, and latitude and longitude.
+   * Creates and sends a request to the Search API by term, and latitude and longitude.
    * <p>
    * See <a href="http://www.yelp.com/developers/documentation/v2/search_api">Yelp Search API V2</a>
    * for more info.
@@ -75,8 +79,10 @@ public class YelpAPI {
   public String searchForBusinessesByLocation(String term, String location) {
     OAuthRequest request = createOAuthRequest(SEARCH_PATH);
     request.addQuerystringParameter("term", term);
-    request.addQuerystringParameter("location", location);
-    request.addQuerystringParameter("cll", String.valueOf(DEFAULT_LATITUDE) + ", " + String.valueOf(DEFAULT_LONGITUDE));
+    //request.addQuerystringParameter("location", location);
+    request.addQuerystringParameter("bounds", "33.787218,-84.415139|33.781605,-84.411352");
+    System.out.println("request");
+    //request.addQuerystringParameter("cll", String.valueOf(DEFAULT_LATITUDE) + ", " + String.valueOf(DEFAULT_LONGITUDE));
     request.addQuerystringParameter("limit", String.valueOf(SEARCH_LIMIT));
     return sendRequestAndGetResponse(request);
   }
