@@ -63,7 +63,7 @@ public class YelpAPI {
   }
 
   /**
-   * Creates and sends a request to the Search API by term and location.
+   * Creates and sends a request to the Search API by term, location, and latitude and longitude.
    * <p>
    * See <a href="http://www.yelp.com/developers/documentation/v2/search_api">Yelp Search API V2</a>
    * for more info.
@@ -80,12 +80,6 @@ public class YelpAPI {
     request.addQuerystringParameter("limit", String.valueOf(SEARCH_LIMIT));
     return sendRequestAndGetResponse(request);
   }
-
-  // //PLEBS
-  // public String searchForBusinessesByGPSCoords(String ) {
-  //   OAuthRequest request = 
-
-  // }
 
   /**
    * Creates and sends a request to the Business API by business ID.
