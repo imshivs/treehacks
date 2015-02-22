@@ -179,7 +179,7 @@ public class YelpAPI {
    * @param yelpApi <tt>YelpAPI</tt> service instance
    * @param yelpApiCli <tt>YelpAPICLI</tt> command line arguments
    */
-  private static void queryAPI(YelpAPI yelpApi, YelpAPICLI yelpApiCli) {
+  private static String queryAPI(YelpAPI yelpApi, YelpAPICLI yelpApiCli) {
 
     String searchResponseJSON =
         yelpApi.searchForBusinessesByDirection(yelpApiCli.term, -122.16562540, 37.42855860);
@@ -228,6 +228,8 @@ public class YelpAPI {
 
     String businessResponseJSON = yelpApi.searchByBusinessId(smallestBusinessID.toString());
     System.out.println("\n\n\n" + businessResponseJSON);
+
+    return businessResponseJSON;
   }
 
   /**
