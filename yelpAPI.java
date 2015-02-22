@@ -87,6 +87,24 @@ public class YelpAPI {
     return sendRequestAndGetResponse(request);
   }
 
+  //Different bounding boxes
+  public String searchForBusinessesByDirection(String term, double longitude, double latitude, double degree) {
+    OAuthRequest request = createOAuthRequest(SEARCH_PATH);
+
+    double longitude_NE = longitude + .1;
+    double longitude_SW = longitude - .1;
+    double latitude_NE = latitude + .1;
+    double latitude_SW  = latitude - .1;
+    String coords = String.valueOf(latitude_SW) + ","
+      + String.valueOf(longitude_SW) + "|" + String.valueOf(latitude_NE)
+      + "," + String.valueOf(longitude_NE);
+    request.addQuerystringParameter("term", term);
+    request.addQuerystringParameter("bounds", coords);
+    System.out.println("request");
+    request.addQuerystringParameter("limit", String.valueOf(SEARCH_LIMIT));
+    return sendRequestAndGetResponse(request);
+  }
+
   /**
    * Creates and sends a request to the Business API by business ID.
    * <p>
@@ -133,8 +151,11 @@ public class YelpAPI {
    * @param yelpApiCli <tt>YelpAPICLI</tt> command line arguments
    */
   private static void queryAPI(YelpAPI yelpApi, YelpAPICLI yelpApiCli) {
+    // String searchResponseJSON =
+    //     yelpApi.searchForBusinessesByLocation(yelpApiCli.term, yelpApiCli.location);
+
     String searchResponseJSON =
-        yelpApi.searchForBusinessesByLocation(yelpApiCli.term, yelpApiCli.location);
+        yelpApi.searchForBusinessesByDirection(yelpApiCli.term, -122.16562540, 37.42855860, 0);
 
     JSONParser parser = new JSONParser();
     JSONObject response = null;
@@ -154,9 +175,23 @@ public class YelpAPI {
         businesses.size(), firstBusinessID));
 
     // Select the first business and display business details
-    String businessResponseJSON = yelpApi.searchByBusinessId(firstBusinessID.toString());
-    System.out.println(String.format("Result for business \"%s\" found:", firstBusinessID));
-    System.out.println(businessResponseJSON);
+    //String businessResponseJSON = yelpApi.searchByBusinessId(firstBusinessID.toString());
+    for (Object business: businesses) {
+      JSONObject currentBusiness = (JSONObject) business;
+      String currBusinessID = currentBusiness.get("id").toString();
+      Class currBusinessDistance = currentBusiness.get("location").getClass();
+      System.out.println(String.format("Result for business \"%s\" found:", currBusinessID));
+      String businessResponseJSON = yelpApi.searchByBusinessId(currBusinessID.toString());
+      System.out.println(businessResponseJSON);
+    }
+    //System.out.println(String.format("Result for business \"%s\" found:", firstBusinessID));
+    //System.out.println(businessResponseJSON);
+
+    //CHANGED
+    // JSONObject jsonObj = new JSONObject(businessResponseJSON);
+
+    // System.out.println("We did this");
+    //System.out.println(businessResponseJSON.id);
   }
 
   /**
