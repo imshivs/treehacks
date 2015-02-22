@@ -179,10 +179,10 @@ public class YelpAPI {
    * @param yelpApi <tt>YelpAPI</tt> service instance
    * @param yelpApiCli <tt>YelpAPICLI</tt> command line arguments
    */
-  private static String queryAPI(YelpAPI yelpApi, YelpAPICLI yelpApiCli) {
+  private static String queryAPI(YelpAPI yelpApi, YelpAPICLI yelpApiCli, double longitude, double latitude, double degree) {
 
     String searchResponseJSON =
-        yelpApi.searchForBusinessesByDirection(yelpApiCli.term, -122.16562540, 37.42855860);
+        yelpApi.searchForBusinessesByDirection(yelpApiCli.term, longitude, latitude);
 
     JSONParser parser = new JSONParser();
     JSONObject response = null;
@@ -195,11 +195,11 @@ public class YelpAPI {
     }
 
     JSONArray businesses = (JSONArray) response.get("businesses");
-    JSONObject firstBusiness = (JSONObject) businesses.get(0);
-    String firstBusinessID = firstBusiness.get("id").toString();
-    System.out.println(String.format(
-        "%s businesses found, querying business info for the top result \"%s\" ...",
-        businesses.size(), firstBusinessID));
+    // JSONObject firstBusiness = (JSONObject) businesses.get(0);
+    // String firstBusinessID = firstBusiness.get("id").toString();
+    // System.out.println(String.format(
+    //     "%s businesses found, querying business info for the top result \"%s\" ...",
+    //     businesses.size(), firstBusinessID));
 
     double smallestRatio = 100000;
 
@@ -216,7 +216,7 @@ public class YelpAPI {
       double currBusinessLong = Double.parseDouble(currBusinessLongitude);
       System.out.println("\n" + currBusinessLat + ", " +  currBusinessLong);
 
-      double temp = yelpApi.distanceByRatio(-122.16562540, 37.42855860, 90, currBusinessLong, currBusinessLong);
+      double temp = yelpApi.distanceByRatio(longitude, latitude, degree, currBusinessLong, currBusinessLong);
       if (smallestRatio > temp) {
         smallestBusinessID = currentBusiness.get("id").toString();
         smallestRatio = temp;
@@ -253,6 +253,6 @@ public class YelpAPI {
     new JCommander(yelpApiCli, args);
 
     YelpAPI yelpApi = new YelpAPI(CONSUMER_KEY, CONSUMER_SECRET, TOKEN, TOKEN_SECRET);
-    queryAPI(yelpApi, yelpApiCli);
+    queryAPI(yelpApi, yelpApiCli, -122.16562540, 37.42855860, 90);
   }
 }
