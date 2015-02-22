@@ -8,6 +8,7 @@ import org.scribe.model.Response;
 import org.scribe.model.Token;
 import org.scribe.model.Verb;
 import org.scribe.oauth.OAuthService;
+import java.util.HashMap;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -81,7 +82,6 @@ public class YelpAPI {
     request.addQuerystringParameter("term", term);
     //request.addQuerystringParameter("location", location);
     request.addQuerystringParameter("bounds", "33.787218,-84.415139|33.781605,-84.411352");
-    System.out.println("request");
     //request.addQuerystringParameter("cll", String.valueOf(DEFAULT_LATITUDE) + ", " + String.valueOf(DEFAULT_LONGITUDE));
     request.addQuerystringParameter("limit", String.valueOf(SEARCH_LIMIT));
     return sendRequestAndGetResponse(request);
@@ -110,7 +110,6 @@ public class YelpAPI {
       + "," + String.valueOf(longitude_NE);
     request.addQuerystringParameter("term", term);
     request.addQuerystringParameter("bounds", coords);
-    System.out.println("request");
     return sendRequestAndGetResponse(request);
   }
 
@@ -166,14 +165,39 @@ public class YelpAPI {
    * @return <tt>String</tt> body of API response
    */
   private String sendRequestAndGetResponse(OAuthRequest request) {
-    System.out.println("Querying " + request.getCompleteUrl() + " ...");
+    System.out.println("\nQuerying " + request.getCompleteUrl() + " ...");
     this.service.signRequest(this.accessToken, request);
     Response response = request.send();
     return response.getBody();
   }
 
-  private HashMap formatJSON(JSONObject business) {
-    
+  private HashMap<String, Object> formatJSON(JSONObject business) {
+    HashMap<String, Object> formattedJSON = new HashMap<String, Object>();
+    String businessID = business.get("id").toString();
+    formattedJSON.put("id", businessID);
+    String businessName = business.get("name").toString();
+    formattedJSON.put("name", businessName);
+    String businessRating = business.get("rating").toString();
+    formattedJSON.put("rating", businessRating);
+    String businessURL = business.get("url").toString();
+    formattedJSON.put("url", businessURL);
+    String businessImageURL = business.get("image_url").toString();
+    formattedJSON.put("image_url", businessImageURL);
+    String businessPhone = business.get("phone").toString();
+    formattedJSON.put("phone", businessPhone);
+    String businessIsClosed = business.get("is_closed").toString();
+    formattedJSON.put("is_closed", businessIsClosed);
+    JSONObject businessLocation = (JSONObject)business.get("location");
+    String businessCity = businessLocation.get("city").toString();
+    String businessAddress = businessLocation.get("display_address").toString();
+    JSONObject businessCoord = (JSONObject)businessLocation.get("coordinate");
+    String businessLatitude = businessCoord.get("latitude").toString();
+    double businessLat = Double.parseDouble(businessLatitude);
+    formattedJSON.put("latitude", businessLat);
+    String businessLongitude = businessCoord.get("longitude").toString();
+    double businessLong = Double.parseDouble(businessLongitude);
+    formattedJSON.put("longitude", businessLong);
+    return formattedJSON;
   }
 
   /**
@@ -183,7 +207,7 @@ public class YelpAPI {
    * @param yelpApi <tt>YelpAPI</tt> service instance
    * @param yelpApiCli <tt>YelpAPICLI</tt> command line arguments
    */
-  private static String queryAPI(YelpAPI yelpApi, YelpAPICLI yelpApiCli, double longitude, double latitude, double degree) {
+  private static HashMap<String, Object> queryAPI(YelpAPI yelpApi, YelpAPICLI yelpApiCli, double longitude, double latitude, double degree) {
 
     String searchResponseJSON =
         yelpApi.searchForBusinessesByDirection(yelpApiCli.term, longitude, latitude);
@@ -206,11 +230,13 @@ public class YelpAPI {
     //     businesses.size(), firstBusinessID));
 
     double smallestRatio = 100000;
+    JSONObject returnJSON = new JSONObject();
 
     // Select the nearest business and display business details
     String smallestBusinessID = "";
     for (Object business: businesses) { 
       JSONObject currentBusiness = (JSONObject) business;
+      System.out.println(yelpApi.formatJSON(currentBusiness) + "\n\n\n\n");
       String currBusinessID = currentBusiness.get("id").toString();
       JSONObject currBusinessLocation = (JSONObject)currentBusiness.get("location");
       JSONObject currBusinessCoord = (JSONObject)currBusinessLocation.get("coordinate");
@@ -224,16 +250,15 @@ public class YelpAPI {
       if (smallestRatio > temp) {
         smallestBusinessID = currentBusiness.get("id").toString();
         smallestRatio = temp;
+        returnJSON = currentBusiness;
       }
       System.out.println(String.format("Result for business \"%s\" found:", currBusinessID));
-      //String businessResponseJSON = yelpApi.searchByBusinessId(currBusinessID.toString());
-      //System.out.println(businessResponseJSON);
     }
 
     String businessResponseJSON = yelpApi.searchByBusinessId(smallestBusinessID.toString());
     System.out.println("\n\n\n" + businessResponseJSON);
 
-    return businessResponseJSON;
+    return yelpApi.formatJSON(returnJSON);
   }
 
   /**
