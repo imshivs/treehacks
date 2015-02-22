@@ -172,6 +172,10 @@ public class YelpAPI {
     return response.getBody();
   }
 
+  private HashMap formatJSON(JSONObject business) {
+    
+  }
+
   /**
    * Queries the Search API based on the command line arguments and takes the first result to query
    * the Business API.
