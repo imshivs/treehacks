@@ -207,10 +207,10 @@ public class YelpAPI {
    * @param yelpApi <tt>YelpAPI</tt> service instance
    * @param yelpApiCli <tt>YelpAPICLI</tt> command line arguments
    */
-  private static HashMap<String, Object> queryAPI(YelpAPI yelpApi, YelpAPICLI yelpApiCli, double longitude, double latitude, double degree) {
+  private static HashMap<String, Object> queryAPI(YelpAPI yelpApi, String term, double longitude, double latitude, double degree) {
 
     String searchResponseJSON =
-        yelpApi.searchForBusinessesByDirection(yelpApiCli.term, longitude, latitude);
+        yelpApi.searchForBusinessesByDirection(term, longitude, latitude);
 
     JSONParser parser = new JSONParser();
     JSONObject response = null;
@@ -282,6 +282,6 @@ public class YelpAPI {
     new JCommander(yelpApiCli, args);
 
     YelpAPI yelpApi = new YelpAPI(CONSUMER_KEY, CONSUMER_SECRET, TOKEN, TOKEN_SECRET);
-    queryAPI(yelpApi, yelpApiCli, -122.16562540, 37.42855860, 90);
+    queryAPI(yelpApi, "dinner", -122.16562540, 37.42855860, 90);
   }
 }
