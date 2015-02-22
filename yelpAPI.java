@@ -35,7 +35,7 @@ public class YelpAPI {
   private static final double DEFAULT_LATITUDE_SW = -84.415253;
   private static final double DEFAULT_LONGITUDE_NE = -84.411352 ;
   private static final double DEFAULT_LATITUDE_NE = 33.787218;
-  private static final int SEARCH_LIMIT = 5;
+  private static final int SEARCH_LIMIT = 20;
   private static final String SEARCH_PATH = "/v2/search";
   private static final String BUSINESS_PATH = "/v2/business";
 
@@ -87,10 +87,20 @@ public class YelpAPI {
     return sendRequestAndGetResponse(request);
   }
 
-  //Different bounding boxes
-  public String searchForBusinessesByDirection(String term, double longitude, double latitude, double degree) {
+  /**
+   * Creates and sends a request to the Search API by term, and a bounding box of latitude and longitude.
+   * <p>
+   * See <a href="http://www.yelp.com/developers/documentation/v2/search_api">Yelp Search API V2</a>
+   * for more info.
+   * 
+   * @param term <tt>String</tt> of the search term to be queried
+   * @param longitude <tt>double</tt> of the location
+   * @param latitude <tt>double</tt> of the location
+   * @return <tt>String</tt> JSON Response
+   */
+  public String searchForBusinessesByDirection(String term, double longitude, double latitude) {
     OAuthRequest request = createOAuthRequest(SEARCH_PATH);
-
+    //Create bounding box
     double longitude_NE = longitude + .1;
     double longitude_SW = longitude - .1;
     double latitude_NE = latitude + .1;
@@ -101,8 +111,27 @@ public class YelpAPI {
     request.addQuerystringParameter("term", term);
     request.addQuerystringParameter("bounds", coords);
     System.out.println("request");
-    request.addQuerystringParameter("limit", String.valueOf(SEARCH_LIMIT));
     return sendRequestAndGetResponse(request);
+  }
+
+  public double distanceByRatio(double baseLongitude, double baseLatitude,
+    double baseDegree, double longitude, double latitude) {
+    double longitudeDiff = longitude - baseLongitude;
+    double latitudeDiff = latitude - baseLatitude;
+    double hypoteneus = Math.pow(longitudeDiff, 2) + Math.pow(latitudeDiff, 2);
+    double degree = Math.asin(latitudeDiff / hypoteneus);
+    double realDegree;
+    if (longitudeDiff > 0 && latitudeDiff > 0) {
+      realDegree = 90 - degree;
+    } else if (longitudeDiff < 0 && latitudeDiff > 0) {
+      realDegree = 270 + degree;
+    } else if (longitudeDiff > 0 && latitudeDiff < 0) {
+      realDegree = 90 + degree;
+    } else {
+      realDegree = 270 - degree;
+    }
+    double degreeDiff = Math.abs(realDegree - baseDegree);
+    return hypoteneus * .75 + degreeDiff * .25;
   }
 
   /**
@@ -151,11 +180,9 @@ public class YelpAPI {
    * @param yelpApiCli <tt>YelpAPICLI</tt> command line arguments
    */
   private static void queryAPI(YelpAPI yelpApi, YelpAPICLI yelpApiCli) {
-    // String searchResponseJSON =
-    //     yelpApi.searchForBusinessesByLocation(yelpApiCli.term, yelpApiCli.location);
 
     String searchResponseJSON =
-        yelpApi.searchForBusinessesByDirection(yelpApiCli.term, -122.16562540, 37.42855860, 0);
+        yelpApi.searchForBusinessesByDirection(yelpApiCli.term, -122.16562540, 37.42855860);
 
     JSONParser parser = new JSONParser();
     JSONObject response = null;
@@ -174,24 +201,33 @@ public class YelpAPI {
         "%s businesses found, querying business info for the top result \"%s\" ...",
         businesses.size(), firstBusinessID));
 
-    // Select the first business and display business details
-    //String businessResponseJSON = yelpApi.searchByBusinessId(firstBusinessID.toString());
-    for (Object business: businesses) {
+    double smallestRatio = 100000;
+
+    // Select the nearest business and display business details
+    String smallestBusinessID = "";
+    for (Object business: businesses) { 
       JSONObject currentBusiness = (JSONObject) business;
       String currBusinessID = currentBusiness.get("id").toString();
-      Class currBusinessDistance = currentBusiness.get("location").getClass();
+      JSONObject currBusinessLocation = (JSONObject)currentBusiness.get("location");
+      JSONObject currBusinessCoord = (JSONObject)currBusinessLocation.get("coordinate");
+      String currBusinessLatitude = currBusinessCoord.get("latitude").toString();
+      double currBusinessLat = Double.parseDouble(currBusinessLatitude);
+      String currBusinessLongitude = currBusinessCoord.get("longitude").toString();
+      double currBusinessLong = Double.parseDouble(currBusinessLongitude);
+      System.out.println("\n" + currBusinessLat + ", " +  currBusinessLong);
+
+      double temp = yelpApi.distanceByRatio(-122.16562540, 37.42855860, 90, currBusinessLong, currBusinessLong);
+      if (smallestRatio > temp) {
+        smallestBusinessID = currentBusiness.get("id").toString();
+        smallestRatio = temp;
+      }
       System.out.println(String.format("Result for business \"%s\" found:", currBusinessID));
-      String businessResponseJSON = yelpApi.searchByBusinessId(currBusinessID.toString());
-      System.out.println(businessResponseJSON);
+      //String businessResponseJSON = yelpApi.searchByBusinessId(currBusinessID.toString());
+      //System.out.println(businessResponseJSON);
     }
-    //System.out.println(String.format("Result for business \"%s\" found:", firstBusinessID));
-    //System.out.println(businessResponseJSON);
 
-    //CHANGED
-    // JSONObject jsonObj = new JSONObject(businessResponseJSON);
-
-    // System.out.println("We did this");
-    //System.out.println(businessResponseJSON.id);
+    String businessResponseJSON = yelpApi.searchByBusinessId(smallestBusinessID.toString());
+    System.out.println("\n\n\n" + businessResponseJSON);
   }
 
   /**
@@ -203,9 +239,6 @@ public class YelpAPI {
 
     @Parameter(names = {"-l", "--location"}, description = "Location to be Queried")
     public String location = DEFAULT_LOCATION;
-
-    // @Parameter(names = {"-c", "--cll"}, description = "GPS coordinates")
-    // public double latitude = DEFAULT_LATITUDE;
   }
 
   /**
